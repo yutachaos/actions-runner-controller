@@ -167,6 +167,49 @@ func TestWebhookWorkflowJob(t *testing.T) {
 			initObjs,
 		)
 	})
+
+	t.Run("Successful when multiple amount", func(t *testing.T) {
+		e := setupTest()
+		hra := &actionsv1alpha1.HorizontalRunnerAutoscaler{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-name",
+			},
+			Spec: actionsv1alpha1.HorizontalRunnerAutoscalerSpec{
+				ScaleTargetRef: actionsv1alpha1.ScaleTargetRef{
+					Name: "test-name",
+				},
+				ScaleUpTriggers: []actionsv1alpha1.ScaleUpTrigger{
+					{Amount: 1},
+				},
+			},
+		}
+
+		rd := &actionsv1alpha1.RunnerDeployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-name",
+			},
+			Spec: actionsv1alpha1.RunnerDeploymentSpec{
+				Template: actionsv1alpha1.RunnerTemplate{
+					Spec: actionsv1alpha1.RunnerSpec{
+						RunnerConfig: actionsv1alpha1.RunnerConfig{
+							Organization: "MYORG",
+							Labels:       []string{"label1"},
+						},
+					},
+				},
+			},
+		}
+
+		initObjs := []runtime.Object{hra, rd}
+
+		testServerWithInitObjs(t,
+			"workflow_job",
+			&e,
+			200,
+			"scaled test-name by 1",
+			initObjs,
+		)
+	})
 	t.Run("WrongLabels", func(t *testing.T) {
 		e := setupTest()
 		hra := &actionsv1alpha1.HorizontalRunnerAutoscaler{
